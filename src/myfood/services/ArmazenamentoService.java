@@ -6,54 +6,99 @@ import java.beans.*;
 import java.util.*;
 
 public class ArmazenamentoService {
-    private Map<String, Usuario> usuarios;
-    private int idAtual;
+    private final Map<String, Usuario> usuarios;
+    private final Map<Integer, Empresa> empresas;
+    private final String pastaData = "data";
+    private final String arquivoUsuarios = pastaData + "/usuarios.xml";
+    private final String arquivoEmpresas = pastaData + "/empresas.xml";
 
-    private static final String CAMINHO_USUARIOS = "data/usuarios.xml";
-
-    public ArmazenamentoService(Map<String, Usuario> usuarios, int id) {
+    public ArmazenamentoService(Map<String, Usuario> usuarios, Map<Integer, Empresa> empresas) {
         this.usuarios = usuarios;
-        this.idAtual = id;
+        this.empresas = empresas;
+
+        File pasta = new File(pastaData);
+        if (!pasta.exists())
+            pasta.mkdirs();
     }
 
-    public void salvarSistema() throws Exception {
-        persistirUsuarios();
-    }
-
-    public void carregarSistema() throws Exception {
-        restaurarUsuarios();
-    }
-
+    /** Remove todos os dados do sistema */
     public void zerarSistema() {
         usuarios.clear();
-        idAtual = 0;
+        empresas.clear();
+        File u = new File(arquivoUsuarios);
+        File e = new File(arquivoEmpresas);
+        if (u.exists())
+            u.delete();
+        if (e.exists())
+            e.delete();
     }
 
+    /** Salva todos os dados (usuários + empresas) */
+    public void salvarSistema() {
+        salvarUsuarios();
+        salvarEmpresas();
+    }
+
+    /** Carrega os dados de ambos os arquivos (se existirem) */
+    public void carregarSistema() throws IOException {
+        carregarUsuarios();
+        carregarEmpresas();
+    }
+
+    /** Encerrar o sistema e persistir tudo */
     public void encerrarSistema() throws Exception {
         salvarSistema();
     }
 
-    private void persistirUsuarios() throws Exception {
-        try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(CAMINHO_USUARIOS)))) {
-            encoder.writeObject(usuarios);
-            encoder.writeObject(idAtual);
+    // ---------------- USUÁRIOS ---------------- //
+
+    private void salvarUsuarios() {
+        try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(arquivoUsuarios)))) {
+            encoder.writeObject(new ArrayList<>(usuarios.values()));
         } catch (Exception e) {
-            throw e;
+            System.out.println("Erro ao salvar usuarios: " + e.getMessage());
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void restaurarUsuarios() throws Exception {
-        File arquivo = new File(CAMINHO_USUARIOS);
-        if (!arquivo.exists())
+    private void carregarUsuarios() {
+        File file = new File(arquivoUsuarios);
+        if (!file.exists())
             return;
-
-        try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(arquivo)))) {
-            Map<String, Usuario> recuperados = (Map<String, Usuario>) decoder.readObject();
-            int novoId = (int) decoder.readObject();
+        try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)))) {
+            List<Usuario> lista = (List<Usuario>) decoder.readObject();
             usuarios.clear();
-            usuarios.putAll(recuperados);
-            idAtual = novoId;
+            for (Usuario u : lista) {
+                usuarios.put(u.getEmail(), u);
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao carregar usuarios: " + e.getMessage());
+        }
+    }
+
+    // ---------------- EMPRESAS ---------------- //
+
+    private void salvarEmpresas() {
+        try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(arquivoEmpresas)))) {
+            encoder.writeObject(new ArrayList<>(empresas.values()));
+        } catch (Exception e) {
+            System.out.println("Erro ao salvar empresas: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void carregarEmpresas() {
+        File file = new File(arquivoEmpresas);
+        if (!file.exists())
+            return;
+        try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)))) {
+            List<Empresa> lista = (List<Empresa>) decoder.readObject();
+            empresas.clear();
+            for (Empresa e : lista) {
+                empresas.put(e.getId(), e);
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao carregar empresas: " + e.getMessage());
         }
     }
 }
