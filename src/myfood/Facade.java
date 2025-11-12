@@ -27,6 +27,7 @@ public class Facade {
     private final ArmazenamentoService armazenamento;
     private final UsuarioService usuarioService;
     private final EmpresaService empresaService;
+    private final ProdutoService produtoService;
 
     public Facade() {
         this.usuarios = new HashMap<>();
@@ -34,6 +35,7 @@ public class Facade {
         this.armazenamento = new ArmazenamentoService(usuarios, empresas);
         this.usuarioService = new UsuarioService(usuarios, armazenamento);
         this.empresaService = new EmpresaService(usuarios, armazenamento, empresas);
+        this.produtoService = new ProdutoService(empresas, armazenamento);
 
         try {
             armazenamento.carregarSistema(); // carrega XML na inicialização
@@ -49,6 +51,8 @@ public class Facade {
     public void encerrarSistema() throws Exception {
         armazenamento.encerrarSistema();
     }
+
+    /* USUARIOS */
 
     public void criarUsuario(String nome, String email, String senha, String endereco)
             throws NomeInvalidoException, EmailInvalidoException, SenhaInvalidoException, EnderecoInvalidoException,
@@ -70,6 +74,8 @@ public class Facade {
         return usuarioService.getAtributoUsuario(id, atributo);
     }
 
+    /* EMPRESAS */
+
     public int criarEmpresa(String tipoEmpresa, int dono, String nome, String endereco, String tipoCozinha)
             throws ProibidoCadastrarEmpresasComMesmoNomeLocalException, EmpresaComNomeJaExisteException,
             UsuarioNaoPodeCriarEmpresaException, UsuarioNaoCadastradoException {
@@ -90,5 +96,23 @@ public class Facade {
     public String getAtributoEmpresa(int empresa, String atributo)
             throws EmpresaNaoCadastradaException, AtributoInvalidoException {
         return empresaService.getAtributoEmpresa(empresa, atributo);
+    }
+
+    /* PRODUTOS */
+
+    public int criarProduto(int empresa, String nome, float valor, String categoria) throws Exception {
+        return produtoService.criarProduto(empresa, nome, valor, categoria);
+    }
+
+    public void editarProduto(int produto, String nome, float valor, String categoria) throws Exception {
+        produtoService.editarProduto(produto, nome, valor, categoria);
+    }
+
+    public String getProduto(String nome, int empresa, String atributo) throws Exception {
+        return produtoService.getProduto(nome, empresa, atributo);
+    }
+
+    public String listarProdutos(int empresa) throws Exception {
+        return produtoService.listarProdutos(empresa);
     }
 }
