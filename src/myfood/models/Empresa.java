@@ -1,11 +1,15 @@
 package myfood.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Empresa {
     private int id;
     private String nome;
     private String endereco;
     private String tipoCozinha;
     private DonoEmpresa dono;
+    private List<Produto> produtos = new ArrayList<>();
 
     public Empresa() {
     }
@@ -56,5 +60,13 @@ public class Empresa {
 
     public void setDono(DonoEmpresa dono) {
         this.dono = dono;
+    }
+
+    public List<Produto> getProdutos() {
+        return produtos;
+    }
+
+    public void setProdutos(List<Produto> produtos) {
+        this.produtos = produtos;
     }
 }
