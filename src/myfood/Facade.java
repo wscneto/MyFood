@@ -1,12 +1,21 @@
 package myfood;
 
+import myfood.Exception.AtributoInvalidoException;
 import myfood.Exception.ContaComEmailJaExisteException;
 import myfood.Exception.CpfInvalidoException;
 import myfood.Exception.EmailInvalidoException;
+import myfood.Exception.EmpresaComNomeJaExisteException;
+import myfood.Exception.EmpresaNaoCadastradaException;
 import myfood.Exception.EnderecoInvalidoException;
+import myfood.Exception.IndiceInvalidoException;
+import myfood.Exception.IndiceMaiorQueEsperadoException;
 import myfood.Exception.LoginOuSenhaInvalidosException;
+import myfood.Exception.NaoExisteEmpresaComNomeException;
 import myfood.Exception.NomeInvalidoException;
+import myfood.Exception.ProibidoCadastrarEmpresasComMesmoNomeLocalException;
 import myfood.Exception.SenhaInvalidoException;
+import myfood.Exception.UsuarioNaoCadastradoException;
+import myfood.Exception.UsuarioNaoPodeCriarEmpresaException;
 import myfood.models.*;
 import myfood.services.*;
 
@@ -14,13 +23,17 @@ import java.util.*;
 
 public class Facade {
     private final Map<String, Usuario> usuarios;
+    private final Map<Integer, Empresa> empresas;
     private final ArmazenamentoService armazenamento;
     private final UsuarioService usuarioService;
+    private final EmpresaService empresaService;
 
     public Facade() {
         this.usuarios = new HashMap<>();
-        this.armazenamento = new ArmazenamentoService(usuarios, 0);
+        this.empresas = new HashMap<>();
+        this.armazenamento = new ArmazenamentoService(usuarios, empresas);
         this.usuarioService = new UsuarioService(usuarios, armazenamento);
+        this.empresaService = new EmpresaService(usuarios, armazenamento, empresas);
 
         try {
             armazenamento.carregarSistema(); // carrega XML na inicialização
@@ -55,5 +68,27 @@ public class Facade {
 
     public String getAtributoUsuario(int id, String atributo) {
         return usuarioService.getAtributoUsuario(id, atributo);
+    }
+
+    public int criarEmpresa(String tipoEmpresa, int dono, String nome, String endereco, String tipoCozinha)
+            throws ProibidoCadastrarEmpresasComMesmoNomeLocalException, EmpresaComNomeJaExisteException,
+            UsuarioNaoPodeCriarEmpresaException, UsuarioNaoCadastradoException {
+        return empresaService.criarEmpresa(tipoEmpresa, dono, nome, endereco, tipoCozinha);
+    }
+
+    public String getEmpresasDoUsuario(int idDono)
+            throws UsuarioNaoPodeCriarEmpresaException, UsuarioNaoCadastradoException {
+        return empresaService.getEmpresasDoUsuario(idDono);
+    }
+
+    public int getIdEmpresa(int idDono, String nome, int indice)
+            throws NomeInvalidoException, IndiceInvalidoException, UsuarioNaoPodeCriarEmpresaException,
+            NaoExisteEmpresaComNomeException, IndiceMaiorQueEsperadoException, UsuarioNaoCadastradoException {
+        return empresaService.getIdEmpresa(idDono, nome, indice);
+    }
+
+    public String getAtributoEmpresa(int empresa, String atributo)
+            throws EmpresaNaoCadastradaException, AtributoInvalidoException {
+        return empresaService.getAtributoEmpresa(empresa, atributo);
     }
 }
