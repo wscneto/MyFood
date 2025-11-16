@@ -77,6 +77,14 @@ public class UsuarioService {
         throw new IllegalArgumentException("Usuario nao cadastrado.");
     }
 
+    public Usuario getUsuarioById(int id) {
+        for (Usuario u : usuarios.values()) {
+            if (Integer.parseInt(u.getId()) == id)
+                return u;
+        }
+        return null;
+    }
+
     private void salvar() {
         try {
             armazenamento.salvarSistema();

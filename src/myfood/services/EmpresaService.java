@@ -57,6 +57,13 @@ public class EmpresaService {
         return nova.getId();
     }
 
+    public Empresa getEmpresaById(int idEmpresa) {
+        Empresa e = empresas.get(idEmpresa);
+        if (e == null)
+            throw new IllegalArgumentException("Empresa nao cadastrada");
+        return e;
+    }
+
     public String getEmpresasDoUsuario(int idDono)
             throws UsuarioNaoPodeCriarEmpresaException, UsuarioNaoCadastradoException {
         Usuario u = getUsuarioPorId(idDono);

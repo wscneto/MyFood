@@ -1,23 +1,36 @@
 package myfood.services;
 
+import myfood.Exception.NomeInvalidoException;
 import myfood.models.*;
 import java.util.*;
 
 public class ProdutoService {
     private final Map<Integer, Empresa> empresas;
-    private final Map<Integer, Produto> produtos;
+    private final Map<Integer, Produto> produtos = new HashMap<>();
     private final ArmazenamentoService armazenamento;
     private int nextProdutoId = 1;
 
     public ProdutoService(Map<Integer, Empresa> empresas, ArmazenamentoService armazenamento) {
         this.empresas = empresas;
         this.armazenamento = armazenamento;
-        this.produtos = new HashMap<>();
+        for (Empresa e : empresas.values()) {
+            if (e.getProdutos() != null) {
+                for (Produto p : e.getProdutos()) {
+                    produtos.put(p.getId(), p);
+                    if (p.getId() >= nextProdutoId)
+                        nextProdutoId = p.getId() + 1;
+                }
+            }
+        }
     }
 
     public void zerarSistema() {
         produtos.clear();
         nextProdutoId = 1;
+    }
+
+    public Produto getProdutoById(int id) {
+        return produtos.get(id);
     }
 
     public int criarProduto(int empresaId, String nome, float valor, String categoria) throws Exception {
@@ -53,7 +66,7 @@ public class ProdutoService {
             throw new Exception("Produto nao cadastrado");
 
         if (nome == null || nome.trim().isEmpty())
-            throw new Exception("Nome invalido");
+            throw new NomeInvalidoException();
 
         if (valor < 0)
             throw new Exception("Valor invalido");
