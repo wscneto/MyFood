@@ -24,18 +24,22 @@ import java.util.*;
 public class Facade {
     private final Map<String, Usuario> usuarios;
     private final Map<Integer, Empresa> empresas;
+    private final Map<Integer, Pedido> pedidos;
     private final ArmazenamentoService armazenamento;
     private final UsuarioService usuarioService;
     private final EmpresaService empresaService;
     private final ProdutoService produtoService;
+    private PedidoService pedidoService;
 
     public Facade() {
         this.usuarios = new HashMap<>();
         this.empresas = new HashMap<>();
-        this.armazenamento = new ArmazenamentoService(usuarios, empresas);
+        this.pedidos = new HashMap<>();
+        this.armazenamento = new ArmazenamentoService(usuarios, empresas, pedidos);
         this.usuarioService = new UsuarioService(usuarios, armazenamento);
         this.empresaService = new EmpresaService(usuarios, armazenamento, empresas);
         this.produtoService = new ProdutoService(empresas, armazenamento);
+        this.pedidoService = new PedidoService(usuarioService, empresaService, produtoService, armazenamento);
 
         try {
             armazenamento.carregarSistema(); // carrega XML na inicialização
@@ -115,4 +119,30 @@ public class Facade {
     public String listarProdutos(int empresa) throws Exception {
         return produtoService.listarProdutos(empresa);
     }
+
+    /* PEDIDOS */
+    public int criarPedido(int cliente, int empresa) {
+        return pedidoService.criarPedido(cliente, empresa);
+    }
+
+    public void adicionarProduto(int numero, int produto) {
+        pedidoService.adicionarProduto(numero, produto);
+    }
+
+    public String getPedidos(int pedido, String atributo) {
+        return pedidoService.getPedidos(pedido, atributo);
+    }
+
+    public void fecharPedido(int numero) {
+        pedidoService.fecharPedido(numero);
+    }
+
+    public void removerProduto(int pedido, String produto) {
+        pedidoService.removerProduto(pedido, produto);
+    }
+
+    public int getNumeroPedido(int cliente, int empresa, int indice) {
+        return pedidoService.getNumeroPedido(cliente, empresa, indice);
+    }
+
 }
