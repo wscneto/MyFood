@@ -36,16 +36,17 @@ public class Facade {
         this.empresas = new HashMap<>();
         this.pedidos = new HashMap<>();
         this.armazenamento = new ArmazenamentoService(usuarios, empresas, pedidos);
-        this.usuarioService = new UsuarioService(usuarios, armazenamento);
-        this.empresaService = new EmpresaService(usuarios, armazenamento, empresas);
-        this.produtoService = new ProdutoService(empresas, armazenamento);
-        this.pedidoService = new PedidoService(usuarioService, empresaService, produtoService, armazenamento);
 
         try {
             armazenamento.carregarSistema(); // carrega XML na inicialização
         } catch (Exception e) {
             System.out.println("Sistema iniciado sem dados persistidos.");
         }
+
+        this.usuarioService = new UsuarioService(usuarios, armazenamento);
+        this.empresaService = new EmpresaService(usuarios, armazenamento, empresas);
+        this.produtoService = new ProdutoService(empresas, armazenamento);
+        this.pedidoService = new PedidoService(usuarioService, empresaService, produtoService, armazenamento, pedidos);
     }
 
     public void zerarSistema() {

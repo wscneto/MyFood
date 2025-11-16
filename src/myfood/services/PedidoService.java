@@ -1,23 +1,45 @@
 package myfood.services;
 
-import java.util.*;
 import myfood.models.*;
+import java.util.*;
 
 public class PedidoService {
-    private Map<Integer, Pedido> pedidos = new HashMap<>();
+    private Map<Integer, Pedido> pedidos;
     private int contadorPedidos = 1;
-
     private UsuarioService usuarioService;
     private EmpresaService empresaService;
     private ProdutoService produtoService;
     private ArmazenamentoService armazenamentoService;
 
     public PedidoService(UsuarioService usuarioService, EmpresaService empresaService,
-            ProdutoService produtoService, ArmazenamentoService armazenamentoService) {
+            ProdutoService produtoService, ArmazenamentoService armazenamentoService,
+            Map<Integer, Pedido> pedidosMap) {
         this.usuarioService = usuarioService;
         this.empresaService = empresaService;
         this.produtoService = produtoService;
         this.armazenamentoService = armazenamentoService;
+        this.pedidos = pedidosMap;
+
+        // Reconstruir relações para todos os pedidos carregados
+        reconstruirTodosPedidos();
+
+        // Inicializar contador
+        if (!pedidos.isEmpty()) {
+            this.contadorPedidos = pedidos.keySet().stream()
+                    .max(Integer::compareTo)
+                    .orElse(0) + 1;
+        }
+    }
+
+    // Método para reconstruir todas as relações dos pedidos
+    private void reconstruirTodosPedidos() {
+        for (Pedido pedido : pedidos.values()) {
+            try {
+                pedido.reconstruirRelacoes(usuarioService, empresaService, produtoService);
+            } catch (Exception e) {
+                System.out.println("Erro ao reconstruir pedido " + pedido.getNumero() + ": " + e.getMessage());
+            }
+        }
     }
 
     public int criarPedido(int idCliente, int idEmpresa) {
@@ -29,13 +51,13 @@ public class PedidoService {
 
         // Verifica se já existe um pedido aberto entre cliente e empresa
         for (Pedido p : pedidos.values()) {
-            if (p.getCliente().equals(user) && p.getEmpresa().equals(empresa) && p.getEstado().equals("aberto"))
+            if (p.getClienteId() == idCliente && p.getEmpresaId() == idEmpresa && p.getEstado().equals("aberto"))
                 throw new IllegalArgumentException("Nao e permitido ter dois pedidos em aberto para a mesma empresa");
         }
 
         Pedido pedido = new Pedido(contadorPedidos++, (Cliente) user, empresa);
         pedidos.put(pedido.getNumero(), pedido);
-        salvar(); // <<< PERSISTE APÓS CRIAR
+        salvar();
         return pedido.getNumero();
     }
 
@@ -50,11 +72,11 @@ public class PedidoService {
         if (produto == null)
             throw new IllegalArgumentException("Produto nao encontrado");
 
-        if (!produto.getEmpresa().equals(pedido.getEmpresa()))
+        if (produto.getEmpresa().getId() != pedido.getEmpresaId())
             throw new IllegalArgumentException("O produto nao pertence a essa empresa");
 
         pedido.adicionarProduto(produto);
-        salvar(); // <<< PERSISTE APÓS ADICIONAR PRODUTO
+        salvar();
     }
 
     public String getPedidos(int numero, String atributo) {
@@ -88,7 +110,7 @@ public class PedidoService {
         if (pedido == null)
             throw new IllegalArgumentException("Pedido nao encontrado");
         pedido.setEstado("preparando");
-        salvar(); // <<< PERSISTE APÓS FECHAR
+        salvar();
     }
 
     public void removerProduto(int numero, String nomeProduto) {
@@ -101,7 +123,7 @@ public class PedidoService {
             throw new IllegalArgumentException("Produto invalido");
 
         pedido.removerProduto(nomeProduto);
-        salvar(); // <<< PERSISTE APÓS REMOVER PRODUTO
+        salvar();
     }
 
     public int getNumeroPedido(int idCliente, int idEmpresa, int indice) {
@@ -121,11 +143,11 @@ public class PedidoService {
     public void zerar() {
         pedidos.clear();
         contadorPedidos = 1;
-        salvar(); // <<< PERSISTE APÓS LIMPAR
+        salvar();
     }
 
     private void salvar() {
-        armazenamentoService.salvarSistema(); // mesmo padrão usado nos outros services
+        armazenamentoService.salvarSistema();
     }
 
     public Map<Integer, Pedido> getPedidosMap() {

@@ -118,6 +118,7 @@ public class ArmazenamentoService {
         }
     }
 
+    // No ArmazenamentoService, método carregarPedidos()
     @SuppressWarnings("unchecked")
     private void carregarPedidos() {
         File file = new File(arquivoPedidos);
@@ -126,8 +127,9 @@ public class ArmazenamentoService {
         try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)))) {
             List<Pedido> lista = (List<Pedido>) decoder.readObject();
             pedidos.clear();
-            for (Pedido p : lista)
+            for (Pedido p : lista) {
                 pedidos.put(p.getNumero(), p);
+            }
         } catch (Exception e) {
             System.out.println("Erro ao carregar pedidos: " + e.getMessage());
         }
